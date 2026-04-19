@@ -1,4 +1,4 @@
-# remote-codex
+# reading-lab
 
 Vibe coding sandbox repository for Codex + GitHub + Vercel workflow.
 
