@@ -1,5 +1,7 @@
 import { getInsights } from "../../../lib/readingStore";
+import { getCurrentUserId } from "../../../lib/session";
 
 export async function GET() {
-  return Response.json(getInsights());
+  const userId = await getCurrentUserId();
+  return Response.json(await getInsights(userId));
 }

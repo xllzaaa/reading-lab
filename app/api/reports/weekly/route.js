@@ -1,5 +1,7 @@
 import { getWeeklyReport } from "../../../../lib/readingStore";
+import { getCurrentUserId } from "../../../../lib/session";
 
 export async function GET() {
-  return Response.json(getWeeklyReport());
+  const userId = await getCurrentUserId();
+  return Response.json(await getWeeklyReport(userId));
 }

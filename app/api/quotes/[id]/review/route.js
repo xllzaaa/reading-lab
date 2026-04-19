@@ -1,4 +1,5 @@
 import { reviewQuote } from "../../../../../lib/readingStore";
+import { getCurrentUserId } from "../../../../../lib/session";
 
 function toId(raw) {
   const id = Number(raw);
@@ -6,13 +7,15 @@ function toId(raw) {
 }
 
 export async function POST(request, { params }) {
-  const id = toId(params.id);
+  const { id: rawId } = await params;
+  const id = toId(rawId);
   if (!id) {
     return Response.json({ error: "无效的摘录编号" }, { status: 400 });
   }
 
+  const userId = await getCurrentUserId();
   const body = await request.json().catch(() => ({}));
-  const result = reviewQuote(id, Boolean(body.remembered));
+  const result = await reviewQuote(id, Boolean(body.remembered), userId);
 
   if (result.error) {
     return Response.json({ error: result.error }, { status: 404 });

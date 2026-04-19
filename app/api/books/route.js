@@ -1,12 +1,15 @@
 import { createBook, listBooks } from "../../../lib/readingStore";
+import { getCurrentUserId } from "../../../lib/session";
 
 export async function GET() {
-  return Response.json({ books: listBooks() });
+  const userId = await getCurrentUserId();
+  return Response.json({ books: await listBooks(userId) });
 }
 
 export async function POST(request) {
+  const userId = await getCurrentUserId();
   const body = await request.json().catch(() => ({}));
-  const result = createBook(body);
+  const result = await createBook(body, userId);
 
   if (result.error) {
     return Response.json({ error: result.error }, { status: 400 });

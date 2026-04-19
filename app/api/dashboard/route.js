@@ -1,5 +1,7 @@
 import { getDashboard } from "../../../lib/readingStore";
+import { getCurrentUserId } from "../../../lib/session";
 
 export async function GET() {
-  return Response.json(getDashboard());
+  const userId = await getCurrentUserId();
+  return Response.json(await getDashboard(userId));
 }

@@ -1,4 +1,5 @@
 import { deleteTodo, getTodo, updateTodo } from "../../../../lib/todoStore";
+import { getCurrentUserId } from "../../../../lib/session";
 
 function toId(param) {
   const id = Number(param);
@@ -6,12 +7,14 @@ function toId(param) {
 }
 
 export async function GET(_request, { params }) {
-  const id = toId(params.id);
+  const { id: rawId } = await params;
+  const id = toId(rawId);
   if (!id) {
     return Response.json({ error: "任务 ID 无效" }, { status: 400 });
   }
 
-  const todo = getTodo(id);
+  const userId = await getCurrentUserId();
+  const todo = await getTodo(id, userId);
   if (!todo) {
     return Response.json({ error: "任务不存在" }, { status: 404 });
   }
@@ -20,11 +23,13 @@ export async function GET(_request, { params }) {
 }
 
 export async function PUT(request, { params }) {
-  const id = toId(params.id);
+  const { id: rawId } = await params;
+  const id = toId(rawId);
   if (!id) {
     return Response.json({ error: "任务 ID 无效" }, { status: 400 });
   }
 
+  const userId = await getCurrentUserId();
   const body = await request.json().catch(() => ({}));
   const patch = {};
 
@@ -47,7 +52,7 @@ export async function PUT(request, { params }) {
     patch.bookId = body.bookId;
   }
 
-  const todo = updateTodo(id, patch);
+  const todo = await updateTodo(id, patch, userId);
   if (!todo) {
     return Response.json({ error: "任务不存在" }, { status: 404 });
   }
@@ -56,12 +61,14 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(_request, { params }) {
-  const id = toId(params.id);
+  const { id: rawId } = await params;
+  const id = toId(rawId);
   if (!id) {
     return Response.json({ error: "任务 ID 无效" }, { status: 400 });
   }
 
-  const ok = deleteTodo(id);
+  const userId = await getCurrentUserId();
+  const ok = await deleteTodo(id, userId);
   if (!ok) {
     return Response.json({ error: "任务不存在" }, { status: 404 });
   }

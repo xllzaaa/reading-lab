@@ -1,4 +1,5 @@
 import { deleteBook, updateBook } from "../../../../lib/readingStore";
+import { getCurrentUserId } from "../../../../lib/session";
 
 function toId(raw) {
   const id = Number(raw);
@@ -6,13 +7,15 @@ function toId(raw) {
 }
 
 export async function PUT(request, { params }) {
-  const id = toId(params.id);
+  const { id: rawId } = await params;
+  const id = toId(rawId);
   if (!id) {
     return Response.json({ error: "无效的书籍编号" }, { status: 400 });
   }
 
+  const userId = await getCurrentUserId();
   const body = await request.json().catch(() => ({}));
-  const result = updateBook(id, body);
+  const result = await updateBook(id, body, userId);
 
   if (result.error) {
     return Response.json({ error: result.error }, { status: 404 });
@@ -22,12 +25,14 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(_request, { params }) {
-  const id = toId(params.id);
+  const { id: rawId } = await params;
+  const id = toId(rawId);
   if (!id) {
     return Response.json({ error: "无效的书籍编号" }, { status: 400 });
   }
 
-  const result = deleteBook(id);
+  const userId = await getCurrentUserId();
+  const result = await deleteBook(id, userId);
 
   if (result.error) {
     return Response.json({ error: result.error }, { status: 404 });

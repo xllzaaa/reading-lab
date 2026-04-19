@@ -1,12 +1,15 @@
 import { addQuote, listQuotes } from "../../../lib/readingStore";
+import { getCurrentUserId } from "../../../lib/session";
 
 export async function GET() {
-  return Response.json({ quotes: listQuotes() });
+  const userId = await getCurrentUserId();
+  return Response.json({ quotes: await listQuotes(userId) });
 }
 
 export async function POST(request) {
+  const userId = await getCurrentUserId();
   const body = await request.json().catch(() => ({}));
-  const result = addQuote(body);
+  const result = await addQuote(body, userId);
 
   if (result.error) {
     return Response.json({ error: result.error }, { status: 400 });
