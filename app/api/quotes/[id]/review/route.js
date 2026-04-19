@@ -8,7 +8,7 @@ function toId(raw) {
 export async function POST(request, { params }) {
   const id = toId(params.id);
   if (!id) {
-    return Response.json({ error: "invalid id" }, { status: 400 });
+    return Response.json({ error: "无效的摘录编号" }, { status: 400 });
   }
 
   const body = await request.json().catch(() => ({}));

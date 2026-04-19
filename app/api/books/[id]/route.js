@@ -8,7 +8,7 @@ function toId(raw) {
 export async function PUT(request, { params }) {
   const id = toId(params.id);
   if (!id) {
-    return Response.json({ error: "invalid id" }, { status: 400 });
+    return Response.json({ error: "无效的书籍编号" }, { status: 400 });
   }
 
   const body = await request.json().catch(() => ({}));
@@ -24,7 +24,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(_request, { params }) {
   const id = toId(params.id);
   if (!id) {
-    return Response.json({ error: "invalid id" }, { status: 400 });
+    return Response.json({ error: "无效的书籍编号" }, { status: 400 });
   }
 
   const result = deleteBook(id);
