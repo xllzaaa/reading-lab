@@ -1,6 +1,5 @@
 "use client";
 
-import { UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -26,7 +25,8 @@ async function api(path, options) {
 }
 
 export default function HomePage() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const [authLoaded, setAuthLoaded] = useState(false);
+  const [user, setUser] = useState(null);
   const [dashboard, setDashboard] = useState(null);
   const [insights, setInsights] = useState(null);
   const [todayPlan, setTodayPlan] = useState(null);
@@ -54,6 +54,8 @@ export default function HomePage() {
   const [discussionKit, setDiscussionKit] = useState(null);
   const [todos, setTodos] = useState([]);
   const [todoForm, setTodoForm] = useState({ text: "", priority: "中", bookId: "" });
+
+  const isSignedIn = Boolean(user);
 
   async function refreshAll() {
     setBusy(true);
@@ -84,10 +86,23 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    (async () => {
+      try {
+        const data = await api("/api/auth/me");
+        setUser(data.user);
+      } catch (_err) {
+        setUser(null);
+      } finally {
+        setAuthLoaded(true);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (authLoaded && isSignedIn) {
       refreshAll();
     }
-  }, [isLoaded, isSignedIn]);
+  }, [authLoaded, isSignedIn]);
 
   useEffect(() => {
     if (!isSignedIn || !selectedBookId) {
@@ -352,12 +367,26 @@ export default function HomePage() {
     }
   }
 
+  async function logout() {
+    try {
+      await api("/api/auth/logout", { method: "POST" });
+      setUser(null);
+      setDashboard(null);
+      setInsights(null);
+      setTodayPlan(null);
+      setShareProfile(null);
+      setTodos([]);
+    } catch (err) {
+      setError(err.message || "退出登录失败");
+    }
+  }
+
   const stats = dashboard?.stats;
   const monthlyGoal = insights?.monthlyGoal;
   const trendMaxPages = Math.max(...(insights?.trend || []).map((item) => item.pages), 1);
   const pendingTodos = todos.filter((item) => !item.done).length;
 
-  if (!isLoaded) {
+  if (!authLoaded) {
     return (
       <main className="reading-shell">
         <section className="hero" style={{ "--delay": "0ms" }}>
@@ -384,7 +413,7 @@ export default function HomePage() {
               创建账号
             </Link>
           </div>
-          <p className="auth-hint">注册密码请使用未泄露过的强密码，例如大小写字母、数字和符号组合；不要使用 88888888、12345678 这类常见密码。</p>
+          <p className="auth-hint">账号体系已改为自管数据库：邮箱、密码哈希和登录 session 都保存在你的 Neon Postgres 里。</p>
         </section>
       </main>
     );
@@ -393,8 +422,13 @@ export default function HomePage() {
   return (
     <main className="reading-shell">
       <div className="account-bar">
-        <span>{user?.firstName || user?.primaryEmailAddress?.emailAddress || "我的账号"}</span>
-        <UserButton afterSignOutUrl="/" />
+        <span>{user?.displayName || user?.email || "我的账号"}</span>
+        <Link className="button-link" href="/password">
+          修改密码
+        </Link>
+        <button type="button" onClick={logout}>
+          退出登录
+        </button>
       </div>
 
       <section className="hero" style={{ "--delay": "0ms" }}>

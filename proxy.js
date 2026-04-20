@@ -1,16 +1,18 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher(["/api(.*)"]);
+const PUBLIC_API_PREFIXES = ["/api/auth", "/api/recommendations"];
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    await auth.protect();
+export default function proxy(request) {
+  const { pathname } = request.nextUrl;
+  const isPublicApi = PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+
+  if (pathname.startsWith("/api") && !isPublicApi && !request.cookies.get("reading_lab_session")) {
+    return NextResponse.json({ error: "请先登录后再使用个人阅读工作台" }, { status: 401 });
   }
-});
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api)(.*)",
-  ],
+  matcher: ["/api/:path*"],
 };
